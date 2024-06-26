@@ -30,7 +30,6 @@ const MovieList = ({
         const url = `${API_URL}${path}`
         try {
             const response = await axios.get(url, {headers: {"Accept": "application/json", "Authorization" : `Bearer ${API_ACCESS_TOKEN}`}})    
-            console.log("🚀 ~ getMovieList ~ response:", response.data)
             setMovies(response.data.results);
         } catch (error) {
             console.log("🚀 ~ getMovieList ~ error:", error)
@@ -51,13 +50,15 @@ const MovieList = ({
             showsHorizontalScrollIndicator={false}
             horizontal
             data={movies}
-            renderItem={({item}) => (
+            renderItem={({item}) => {
+              return(
                 <MovieItem
                 movie={item}
                 size={coverImageSize[coverType]}
                 coverType={coverType}
                 />
-            )}
+              )
+            }}
             keyExtractor={(item) => item.id.toString()}
         />
     </View>

@@ -1,3 +1,5 @@
+import { DimensionValue } from "react-native";
+
 export interface MovieListProps {
     title: string;
     path: string;
@@ -42,6 +44,6 @@ export interface Movie {
   
 export interface MovieItemProps {
   movie: Movie
-  size: {width: number, height: number}
+  size: {width: DimensionValue, height: number}
   coverType: 'poster' | 'backdrop'
 };
