@@ -1,4 +1,4 @@
-import { API_ACCESS_TOKEN } from '@env'
+import { API_ACCESS_TOKEN, API_URL } from '@env'
 import axios from 'axios'
 import React, {useState, useEffect } from 'react'
 import { View, StyleSheet, Text, FlatList } from 'react-native'
@@ -27,16 +27,15 @@ const MovieList = ({
     }, [])
 
     const getMovieList = async() : Promise<void> => {
-        const url = `https://api.themoviedb.org/3/${path}`
+        const url = `${API_URL}${path}`
         try {
             const response = await axios.get(url, {headers: {"Accept": "application/json", "Authorization" : `Bearer ${API_ACCESS_TOKEN}`}})    
+            console.log("🚀 ~ getMovieList ~ response:", response.data)
             setMovies(response.data.results);
         } catch (error) {
             console.log("🚀 ~ getMovieList ~ error:", error)
         }
     }
-
-    console.log(movies)
 
   return (
     <View>
