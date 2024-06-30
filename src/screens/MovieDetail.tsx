@@ -1,118 +1,152 @@
-import React, { useState, useEffect } from 'react'
-import { View, Text, Button, TouchableOpacity } from 'react-native'
-import { FontAwesome } from '@expo/vector-icons'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { useNavigation } from '@react-navigation/native'
+import React, { useEffect, useState, ReactNode, ReactElement } from 'react';
+import { View, Text, ImageBackground, StyleSheet, ScrollView } from 'react-native';
+import MovieList from '../components/movies/MovieList';
+import { Movie, MovieListProps } from '../types/app';
+import axios from 'axios';
+import { API_URL, API_ACCESS_TOKEN } from '@env';
+import { LinearGradient } from 'expo-linear-gradient'
+import {FontAwesome} from "@expo/vector-icons"
 
-interface Movie {
-  id: number;
-  title: string;
-  poster: string;
-  year: string;
-}
+type Props = {
+  route: any,
+};
 
-interface MovieDetailProps {
-  navigation: any;
-  route: {
-    params: {
-      movie: Movie;
-    };
+
+const Row = ({ children }: {children: ReactNode}) => (
+  <View style={styles.row}>{children}</View>
+)
+
+export default function MovieDetail({ route }: Props): React.JSX.Element {
+  const [movie, setMovie] = useState<Movie | null>(null);
+  const { id } = route.params;
+
+  const movieRecommended: MovieListProps = {
+    title: 'Recommendation',
+    path: `movie/${id}/recommendations`,
+    coverType: 'poster',
   };
-}
-
-export default function MovieDetail({ navigation, route }: MovieDetailProps): React.ReactElement {
-  const [isFavorite, setIsFavorite] = useState(false)
-  const { movie } = route.params
-  const nav = useNavigation()
 
   useEffect(() => {
-    const initializeFavoriteStatus = async () => {
-      const isFav = await checkIsFavorite(movie.id)
-      setIsFavorite(isFav)
-    }
-    initializeFavoriteStatus()
-  }, [movie.id])
+    getMovieDetail();
+  }, [id]);
 
-  const addFavorite = async (movie: Movie) => {
+  const getMovieDetail = async (): Promise<void> => {
     try {
-      const initialData = await AsyncStorage.getItem('@FavoriteList')
-      let favMovieList = []
-
-      if (initialData !== null) {
-        favMovieList = [...JSON.parse(initialData), movie]
-      } else {
-        favMovieList = [movie]
-      }
-
-      await AsyncStorage.setItem('@FavoriteList', JSON.stringify(favMovieList))
-      setIsFavorite(true)
+      const response = await axios.get(`${API_URL}movie/${id}`, {
+        headers: {
+          "Accept": "application/json",
+          "Authorization": `Bearer ${API_ACCESS_TOKEN}`
+        }
+      });
+      setMovie(response.data);
     } catch (error) {
-      console.log(error)
+      console.log("🚀 ~ getMovieDetail ~ error:", error);
     }
-  }
-
-  const removeFavorite = async (id: number) => {
-    try {
-      const initialData = await AsyncStorage.getItem('@FavoriteList')
-      let favMovieList = []
-
-      if (initialData !== null) {
-        favMovieList = JSON.parse(initialData).filter((movie: Movie) => movie.id !== id)
-        await AsyncStorage.setItem('@FavoriteList', JSON.stringify(favMovieList))
-      }
-
-      setIsFavorite(false)
-    } catch (error) {
-      console.log(error)
-    }
-  }
-
-  const toggleFavorite = () => {
-    if (isFavorite) {
-      removeFavorite(movie.id)
-    } else {
-      addFavorite(movie)
-    }
-  }
-
-  const checkIsFavorite = async (id: number) => {
-    try {
-      const initialData = await AsyncStorage.getItem('@FavoriteList')
-      if (initialData !== null) {
-        const favMovieList: Movie[] = JSON.parse(initialData)
-        return favMovieList.some((movie: Movie) => movie.id === id)
-      }
-      return false
-    } catch (error) {
-      console.log(error)
-      return false
-    }
-  }
+  };
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text style={{ marginBottom: 8 }}>Movie Detail Page</Text>
-      <TouchableOpacity onPress={toggleFavorite}>
-        <FontAwesome
-          name={isFavorite ? 'heart' : 'heart-o'}
-          size={24}
-          color={isFavorite ? 'red' : 'black'}
-          style={{ marginBottom: 16 }}
-        />
-      </TouchableOpacity>
-      <Button
-        title="KEMBALI"
-        onPress={() => {
-          navigation.navigate('MovieScreen')
+    <ScrollView>
+      {movie && (
+        <View>
+        <ImageBackground
+        resizeMode='cover'
+        style={styles.backgroundImage}
+        imageStyle={styles.backgroundImage}
+        source={{
+          uri: `https://image.tmdb.org/t/p/w500${movie.backdrop_path}`
         }}
+      >
+          <LinearGradient
+          colors={['#00000000', 'rgba(0, 0, 0, 0.7)']}
+          locations={[0.6, 0.8]}
+          style={styles.gradientStyle}
+          >
+            <Text style={styles.movieTitle}>
+              {movie.title}
+            </Text>
+            <View style={styles.ratingContainer}>
+              <FontAwesome name="star" size={16} color={"yellow"}/>
+              <Text style={styles.rating}>
+                {movie.vote_average.toFixed(1)}
+              </Text>
+            </View>
+          </LinearGradient>
+      </ImageBackground>
+      <View style={{margin: 20}}>
+        <View>
+          <Text>
+            {movie.overview}
+          </Text>
+        </View>
+        <View style={{flex: 1}}>
+          <Row>
+            <View>
+              <Text style={styles.titleText}>Original Language</Text>
+              <Text>{movie.original_language}</Text>
+            </View>
+            <View>
+              <Text style={styles.titleText}>Popularity</Text>
+              <Text>{movie.popularity}</Text>
+            </View>
+          </Row>
+          <Row>
+            <View>
+              <Text style={styles.titleText}>Release date</Text>
+              <Text>{movie.popularity}</Text>
+            </View>
+            <View>
+              <Text style={styles.titleText}>Vote count</Text>
+              <Text>{movie.popularity}</Text>
+            </View>
+          </Row>
+        </View>
+        </View>
+      </View>
+      )}
+      <MovieList
+        key={movieRecommended.title}
+        title={movieRecommended.title}
+        path={movieRecommended.path}
+        coverType={movieRecommended.coverType}
       />
-      <Button
-        title="Lihat Favorite"
-        onPress={() => {
-          nav.navigate('Favorite')
-        }}
-        style={{ marginTop: 20 }}
-      />
-    </View>
-  )
+    </ScrollView>
+  );
 }
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between"
+  },
+  backgroundImage: {
+    marginRight: 4,
+    height: 200
+  },
+  backgroundImageStyle: {
+    borderRadius: 8,
+  },
+  movieTitle: {
+    color: 'white',
+  },
+  titleText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  gradientStyle: {
+    padding: 8,
+    height: '100%',
+    width: '100%',
+    borderRadius: 8,
+    display: 'flex',
+    justifyContent: 'flex-end',
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  rating: {
+    color: 'yellow',
+    fontWeight: '700',
+  },
+})

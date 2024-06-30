@@ -1,12 +1,8 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { NavigationContainer } from '@react-navigation/native'
-import { createStackNavigator } from '@react-navigation/stack'
-import MovieDetail from './MovieDetail'
-import Favorite from './Favorite'
+import BottomTabNavigator from './src/navigations/BottomTabNavigation'
 
-const Stack = createStackNavigator()
-
-export default function App(): React.JSX.Element {
+export default function App(): JSX.Element {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Favorite">
